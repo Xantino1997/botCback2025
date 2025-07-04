@@ -1,0 +1,20 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "nodemon index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.1",
+    "nodemon": "^3.1.10",
+    "qrcode": "^1.5.4",
+    "whatsapp-web.js": "^1.31.0",
+    "wwebjs-mongo": "^1.1.0"
+  }
+}
