@@ -14,6 +14,11 @@ let qrCodeBase64 = '';
 let client;
 const usuariosUnicos = new Set();
 
+app.get('/api/test', (req, res) => {
+  res.json({ message: '🧪 API Test: El servidor de render esta ok está funcionando correctamente.' });
+});
+
+
 mongoose.connect('mongodb+srv://devprueba2025:devprueba2025@cluster0.9x8yltr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/wwebjs', {
   useNewUrlParser: true,
   useUnifiedTopology: true
