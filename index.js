@@ -71,19 +71,21 @@ mongoose.connect('mongodb+srv://devprueba2025:devprueba2025@cluster0.9x8yltr.mon
 
   // Listener de mensajes
   client.on('message', async (msg) => {
-    if (msg.from) {
-      usuariosUnicos.add(msg.from);
-    }
-
+    if (msg.from) usuariosUnicos.add(msg.from);
+  
     if (msg.body.toLowerCase() === 'hola') {
       const hora = new Date().toLocaleTimeString('es-AR', {
         hour: '2-digit',
         minute: '2-digit'
       });
       await msg.reply(`Hola 👋, son las ${hora}. ¿Cómo te llamás?`);
+    } else if (msg.body.length < 25 && !msg.body.includes(' ')) {
+      // Si responde con una sola palabra (supuesto nombre)
+      const nombre = msg.body.trim();
+      await msg.reply(`Gracias por escribir, ${nombre}. Ahí te atiendo 😊`);
     }
   });
-
+  
 }).catch(err => {
   console.error("⚠️ Error conectando a MongoDB:", err);
 });
