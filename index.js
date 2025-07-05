@@ -12,13 +12,10 @@ app.use(cors());
 
 let qrCodeBase64 = '';
 let client;
+let isAuthenticated = false;
 const usuariosUnicos = new Set();
 
-app.get('/api/test', (req, res) => {
-  res.json({ message: '🧪 API Test: El servidor de render esta ok está funcionando correctamente.' });
-});
-
-
+// Conexión a MongoDB
 mongoose.connect('mongodb+srv://devprueba2025:devprueba2025@cluster0.9x8yltr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/wwebjs', {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -39,8 +36,10 @@ mongoose.connect('mongodb+srv://devprueba2025:devprueba2025@cluster0.9x8yltr.mon
   });
 
   client.on('qr', async (qr) => {
-    qrCodeBase64 = await qrcode.toDataURL(qr);
-    console.log("🔄 Nuevo QR generado.");
+    if (!isAuthenticated) {
+      qrCodeBase64 = await qrcode.toDataURL(qr);
+      console.log("🔄 Nuevo QR generado.");
+    }
   });
 
   client.on('ready', () => {
@@ -50,17 +49,19 @@ mongoose.connect('mongodb+srv://devprueba2025:devprueba2025@cluster0.9x8yltr.mon
   client.on('authenticated', () => {
     console.log('🔐 Cliente autenticado.');
     qrCodeBase64 = '';
+    isAuthenticated = true;
   });
 
   client.on('auth_failure', () => {
     console.error('❌ Fallo de autenticación');
+    isAuthenticated = false;
   });
 
   client.on('disconnected', async (reason) => {
     console.warn('📴 Cliente desconectado:', reason);
-    qrCodeBase64 = ''; // Resetear QR para que el frontend pueda pedir uno nuevo si es necesario
+    qrCodeBase64 = '';
+    isAuthenticated = false;
 
-    // Si no es logout explícito, reintentar conexión automática
     if (reason !== 'logout') {
       try {
         console.log('🔄 Reintentando conexión automática...');
@@ -74,27 +75,30 @@ mongoose.connect('mongodb+srv://devprueba2025:devprueba2025@cluster0.9x8yltr.mon
 
   await client.initialize();
 
-  // Listener de mensajes
   client.on('message', async (msg) => {
     if (msg.from) usuariosUnicos.add(msg.from);
-  
-    if (msg.body.toLowerCase() === 'hola') {
+
+    const text = msg.body.trim().toLowerCase();
+
+    if (text === 'hola') {
       const hora = new Date().toLocaleTimeString('es-AR', {
         hour: '2-digit',
         minute: '2-digit'
       });
       await msg.reply(`Hola 👋, son las ${hora}. ¿Cómo te llamás?`);
-    } else if (msg.body.length < 25 && !msg.body.includes(' ')) {
-      // Si responde con una sola palabra (supuesto nombre)
+    } else if (text.length < 25 && !text.includes(' ')) {
       const nombre = msg.body.trim();
       await msg.reply(`Gracias por escribir, ${nombre}. Ahí te atiendo 😊`);
+    } else {
+      await msg.reply('No entendí bien 🤔. ¿Podrías repetirlo de otra forma?');
     }
   });
-  
+
 }).catch(err => {
   console.error("⚠️ Error conectando a MongoDB:", err);
 });
 
+// Endpoints
 app.get('/api/users', (req, res) => {
   res.json({ count: usuariosUnicos.size });
 });
@@ -108,7 +112,7 @@ app.get('/api/qr', (req, res) => {
 });
 
 app.get('/api/status', (req, res) => {
-  res.json({ status: client?.info ? 'activo' : 'no conectado' });
+  res.json({ status: isAuthenticated ? 'activo' : 'no conectado' });
 });
 
 app.get('/api/logout', async (req, res) => {
@@ -116,6 +120,8 @@ app.get('/api/logout', async (req, res) => {
     if (client) {
       await client.logout();
       await client.destroy();
+      qrCodeBase64 = '';
+      isAuthenticated = false;
       console.log('🔒 Sesión cerrada desde el frontend.');
       res.json({ message: 'Sesión cerrada correctamente' });
     } else {
