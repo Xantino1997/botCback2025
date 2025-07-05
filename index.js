@@ -14,7 +14,6 @@ let qrCodeBase64 = '';
 let client;
 let isAuthenticated = false;
 const usuariosUnicos = new Set();
-
 // Conexión a MongoDB
 mongoose.connect('mongodb+srv://devprueba2025:devprueba2025@cluster0.9x8yltr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/wwebjs', {
   useNewUrlParser: true,
